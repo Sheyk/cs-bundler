@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CsBundler
 {
@@ -18,7 +15,12 @@ namespace CsBundler
                 throw new ArgumentException(nameof(args));
 
             DirectoryPath = args[0];
-            OutputFileName = args[1];
+            OutputFileName = args.Length > 1 ? args[1] : "bundle.cs";
+
+            if (!OutputFileName.EndsWith(".cs"))
+                OutputFileName = OutputFileName + ".cs";
+            if (DirectoryPath.EndsWith("\\") || DirectoryPath.EndsWith("/"))
+                DirectoryPath = DirectoryPath.TrimEnd('/','\\').Replace("/", "\\");
         }
 
         public static bool IsValid(string[] args, out string errorMessage)
