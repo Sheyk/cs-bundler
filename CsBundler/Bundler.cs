@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace CsBundler
 {
@@ -9,6 +10,7 @@ namespace CsBundler
     {
         private readonly Config _config;
         private readonly List<string> _foldersToIgnore = new List<string> {"bin","obj",".vs",".git"};
+        private readonly Regex _matchUsings = new Regex("using [\\w\\d.]*;");
 
         public Bundler(Config config)
         {
@@ -23,6 +25,7 @@ namespace CsBundler
 
             var fileContents = ReadAllFiles().ToList();
             var bundleText = fileContents.Aggregate((current, next) => current + "\r\n" + next);
+            bundleText = PullUsingsOnTop(bundleText);
 
             File.WriteAllText(bundleFilePath, bundleText);
 
@@ -42,6 +45,16 @@ namespace CsBundler
                 ReadAllFiles(list, subDirectoryPath);
 
             return list;
+        }
+
+        private string PullUsingsOnTop(string text)
+        {
+            var usings = new List<string>();
+            foreach (Match match in _matchUsings.Matches(text))
+                usings.Add(match.Value);
+            
+            return usings.Distinct().Aggregate((current,next) => current + "\r\n" + next) 
+                   + _matchUsings.Replace(text, string.Empty);
         }
     }
 }
